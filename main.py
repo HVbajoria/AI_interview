@@ -39,20 +39,39 @@ chat_session = model.start_chat(
   ]
 )
 
+print("Interview begins!")
+
+speech_recognizer.session_stopped.connect(stop_cb)
+speech_recognizer.canceled.connect(stop_cb)
+speech_recognizer.start_continuous_recognition()
+while not done:
 # speech_recognizer.recognizing.connect(lambda evt: print('RECOGNIZING: {}'.format(evt)))
-new_text = speech_recognizer.recognized.connect(lambda evt: print('User: {}'.format(evt.result.text)))
-if new_text!=candidate:
-    candidate = new_text
-    response = chat_session.send_message(candidate)
+    new_text = ""
+
+    def recognizing_handler(e : speechsdk.SpeechRecognitionEventArgs) :
+        if speechsdk.ResultReason.RecognizingSpeech == e.result.reason and len(e.result.text) > 0 :
+            print("Recognized: {}".format(result.text))
+            print("Offset in Ticks: {}".format(result.offset))
+            print("Duration in Ticks: {}".format(result.duration))
+    
+    # def handle_recognized(evt):
+    #     print(evt)
+    #     event_str = evt.result.text
+    #     import re
+    #     # Use regex to extract the text
+    #     match = re.search(r'text="([^"]+)"', event_str)
+    #     if match:
+    #         new_text = match.group(1)
+    #         print(new_text)
+    new_text='hello'
+    speech_recognizer.recognized.connect(lambda evt:handle_recognized(evt))
+    time.sleep(1)
+    print("User: ",new_text)
+    if new_text!=candidate and new_text!=None and new_text!="{}":
+        candidate = "hello"
+        response = chat_session.send_message(candidate)
+        print("Interviewer: ",response.text)
 # speech_recognizer.session_started.connect(lambda evt: print('SESSION STARTED: {}'.format(evt)))
 # speech_recognizer.session_stopped.connect(lambda evt: print('SESSION STOPPED {}'.format(evt)))
 # speech_recognizer.canceled.connect(lambda evt: print('CANCELED {}'.format(evt)))
 
-speech_recognizer.session_stopped.connect(stop_cb)
-speech_recognizer.canceled.connect(stop_cb)
-
-speech_recognizer.start_continuous_recognition()
-while not done:
-    time.sleep(.5)
-
-print(response.text)
